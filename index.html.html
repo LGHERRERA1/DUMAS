@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dumas Case - Consolidated Financial Statements</title>
+    <style>
+        /* --- GENERAL STYLES --- */
+        :root {
+            --primary: #1e3a8a;       /* Blue 900 */
+            --primary-light: #3b82f6; /* Blue 500 */
+            --accent: #f59e0b;        /* Amber 500 */
+            --accent-bg: #fffbeb;     /* Amber 50 */
+            --bg-body: #e2e8f0;       /* Darker Slate */
+            --white: #ffffff;
+            --border: #94a3b8;        /* Visible border */
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --blue-highlight: #eff6ff;
+            --blue-border: #3b82f6;
+            --red-text: #b91c1c;
+            --green-text: #15803d;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-body);
+            margin: 0;
+            padding: 10px;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        /* Main Card Container */
+        .main-container {
+            background: var(--white);
+            width: max-content; 
+            max-width: 100%;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border);
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, #172554 100%);
+            color: white;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 4px solid var(--accent);
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .header-content h1 {
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .header-content p {
+            margin: 0;
+            color: #93c5fd;
+            font-size: 0.8rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        /* Language Toggle */
+        .lang-toggle {
+            display: flex;
+            background: rgba(0,0,0,0.3);
+            border-radius: 4px;
+            padding: 2px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .lang-btn {
+            background: transparent;
+            color: rgba(255,255,255,0.8);
+            border: none;
+            padding: 3px 8px;
+            border-radius: 2px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .lang-btn.active { background: var(--white); color: var(--primary); }
+
+        .btn-view {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        .btn-view:hover, .btn-view.active { background-color: var(--white); color: var(--primary); }
+
+        .btn-menu {
+            background-color: var(--accent);
+            color: var(--primary);
+            border: none;
+            padding: 5px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.85rem;
+        }
+
+        /* Table Styling */
+        .table-wrapper {
+            overflow-x: auto;
+            width: 100%;
+            padding: 0;
+        }
+
+        table {
+            width: auto;
+            border-collapse: collapse;
+            margin: 0;
+        }
+
+        /* Column Dividers */
+        th, td { border-right: 1px solid #cbd5e1; }
+        th:last-child, td:last-child { border-right: none; }
+
+        /* HEADERS */
+        th {
+            background-color: #f1f5f9;
+            color: var(--text-main);
+            text-align: right;
+            padding: 8px 4px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            border-bottom: 2px solid #64748b;
+            font-weight: 800;
+            white-space: normal;
+            vertical-align: bottom;
+            line-height: 1.1;
+        }
+
+        th:first-child { 
+            text-align: left; 
+            padding-left: 8px; 
+            max-width: 160px;
+            width: 160px;
+        }
+        
+        th.consolidado-header { background-color: #dbeafe; color: #1e40af; border-bottom-color: #2563eb; }
+        th.group-header { background-color: var(--primary); color: white; border-bottom: none; }
+
+        /* DATA CELLS */
+        td {
+            padding: 5px 4px;
+            text-align: right;
+            border-bottom: 1px solid #e2e8f0;
+            font-family: 'Consolas', monospace;
+            font-size: 1rem;
+            color: var(--text-main);
+            white-space: nowrap;
+        }
+
+        td:first-child {
+            text-align: left;
+            padding-left: 8px;
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: 600;
+            white-space: normal;
+            font-size: 0.9rem;
+            line-height: 1.1;
+        }
+
+        /* HOVER EFFECTS */
+        tr:not(.row-grand-total):hover td { 
+            background-color: #fffbeb; 
+        }
+        
+        .row-grand-total:hover td {
+            background-color: #2b4c85; 
+            color: #ffffff;
+        }
+        
+        /* Section Headers */
+        .row-section td {
+            background-color: #f8fafc;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            padding-top: 10px;
+            padding-bottom: 4px;
+            border-bottom: 2px solid #cbd5e1;
+            text-align: left;
+            padding-left: 8px;
+        }
+        
+        /* Subtotals */
+        .row-total td { 
+            background-color: #f1f5f9; 
+            font-weight: 700; 
+            border-top: 1px solid #000; 
+            font-size: 1rem;
+        }
+        
+        /* Grand Totals */
+        .row-grand-total td { 
+            background-color: var(--primary); 
+            color: #e2e8f0; 
+            font-weight: 700; 
+            font-size: 0.95rem; 
+            border-right-color: #334155;
+            padding: 8px 4px;
+            white-space: nowrap;
+        }
+        .row-grand-total td:last-child { color: var(--accent); }
+
+        /* Interactive Cells */
+        td.interactive, td.interactive-adj { cursor: pointer; transition: background 0.1s; }
+        td.interactive-adj { color: #2563eb; font-weight: 600; background-color: rgba(37, 99, 235, 0.05); }
+        td.interactive-adj:hover { background-color: rgba(37, 99, 235, 0.2); text-decoration: underline; }
+        
+        td.interactive { color: #d97706; font-weight: 600; background-color: rgba(217, 119, 6, 0.05); }
+        td.interactive:hover { background-color: rgba(217, 119, 6, 0.2); text-decoration: underline; }
+
+        .info-icon { font-size: 10px; margin-left: 2px; vertical-align: super; opacity: 0.8; }
+
+        /* --- SIDEBAR --- */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; display: none; backdrop-filter: blur(2px); }
+        .overlay.active { display: block; }
+
+        .sidebar {
+            position: fixed; top: 0; left: 0; height: 100%; width: 400px; max-width: 90%;
+            background: var(--white); z-index: 50; transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column; box-shadow: 10px 0 30px rgba(0,0,0,0.2);
+        }
+        .sidebar.active { transform: translateX(0); }
+
+        .sidebar-header { padding: 15px; background: var(--primary); color: white; display: flex; justify-content: space-between; align-items: center; }
+        .nav-grid { display: grid; grid-template-columns: repeat(4, 1fr); background: #f1f5f9; border-bottom: 1px solid var(--border); }
+        .nav-item { padding: 8px 2px; text-align: center; cursor: pointer; border-right: 1px solid #e2e8f0; transition: 0.2s; }
+        .nav-item.active { background: white; color: var(--primary); border-bottom: 3px solid var(--accent); font-weight: bold; }
+        .nav-label { font-size: 0.65rem; text-transform: uppercase; display: block; }
+        .nav-num { font-size: 1rem; font-weight: 800; opacity: 0.4; }
+        .sidebar-content { flex: 1; overflow-y: auto; padding: 15px; background: #fff; }
+        
+        .theory-box { background: var(--blue-highlight); padding: 10px; border-radius: 6px; border-left: 4px solid var(--blue-border); font-size: 0.85rem; color: #1e3a8a; margin-bottom: 15px; line-height: 1.4; }
+        
+        /* Modal & Calculations */
+        .modal-wrapper { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.6); opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+        .modal-wrapper.open { opacity: 1; pointer-events: auto; }
+        .modal-box { background: white; width: 90%; max-width: 500px; border-radius: 8px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); transform: scale(0.95); transition: 0.2s; }
+        .modal-wrapper.open .modal-box { transform: scale(1); }
+        .modal-head { background: var(--primary); padding: 12px 15px; color: white; display: flex; justify-content: space-between; border-radius: 8px 8px 0 0; }
+        .modal-body { padding: 15px; max-height: 80vh; overflow-y: auto; }
+
+        .calc-box { background: #ffffff; border: 1px solid #94a3b8; border-radius: 6px; padding: 10px; margin-top: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .calc-header { font-size: 0.75rem; text-transform: uppercase; color: #475569; font-weight: 800; margin-bottom: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
+        
+        .calc-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start;
+            padding: 4px 0; 
+            font-family: 'Consolas', monospace; 
+            font-size: 0.9rem; 
+            color: #334155; 
+        }
+        .calc-row span:first-child { flex: 1; padding-right: 10px; } 
+        .calc-row span:last-child { white-space: nowrap; font-weight: 600; } 
+        
+        .calc-row.total { border-top: 2px solid #334155; margin-top: 4px; padding-top: 6px; font-weight: 700; color: var(--primary); font-size: 1rem; }
+
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="header-content">
+                <h1>Dumas Case</h1>
+                <p>Consolidation Workbook</p>
+            </div>
+            <div class="header-actions">
+                <div class="lang-toggle">
+                    <button class="lang-btn active" onclick="setLanguage('en')" id="lang-en">EN</button>
+                    <button class="lang-btn" onclick="setLanguage('es')" id="lang-es">ES</button>
+                </div>
+                <button class="btn-view active" onclick="switchView('BS')" id="btn-BS">Balance</button>
+                <button class="btn-view" onclick="switchView('PL')" id="btn-PL">Income</button>
+                <button class="btn-menu" onclick="toggleSidebar()">
+                    <span>💡</span> <span id="btn-analysis-text">Help</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- TABLE -->
+        <div class="table-wrapper">
+            <table id="financialTable">
+                <thead id="table-head">
+                    <!-- Injected via JS -->
+                </thead>
+                <tbody id="table-body">
+                    <!-- Injected via JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3 id="sidebar-title" style="margin:0; font-size:1.1rem;">Consolidation Steps</h3>
+            <button class="close-btn" onclick="toggleSidebar()" style="background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;">&times;</button>
+        </div>
+        <div class="nav-grid" id="sidebar-nav"></div>
+        <div class="sidebar-content" id="sidebar-content"></div>
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal-wrapper" id="modalWrapper" onclick="closeModal()">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <div class="modal-head">
+                <span id="modalTitle" style="font-weight:700; font-size:1rem">Title</span>
+                <button onclick="closeModal()" style="background:none; border:none; color:white; cursor:pointer; font-size:1.2rem;">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- MULTILINGUAL CONTENT & CALCULATIONS ---
+        let currentLang = 'en'; // Default language
+
+        // 1. BALANCE SHEET DATA (Dumas 77k Scale)
+        const balanceSheetRows = [
+            { type: 'section', label: 'NON-CURRENT ASSETS' },
+            { 
+                type: 'row', label: 'Property, plant & equipment', c1: '43,000', c2: '20,000', c3: '+2,000', c4: '65,000',
+                adjInfo: { 
+                    title: { en: 'PPE Fair Value Adjustment', es: 'Ajuste de Valor Razonable en PPE' }, 
+                    theory: { 
+                        en: 'Fair Value adjustment at acquisition.', 
+                        es: 'Ajuste al Valor Razonable en el momento de la adquisición.' 
+                    },
+                    text: {
+                        en: 'Adding Fair Value surplus to ABC Assets.',
+                        es: 'Sumando el superávit de Valor Razonable a los activos de ABC.'
+                    },
+                    calc: [
+                        { label: {en: 'Dumas Book Value', es: 'Valor en Libros Dumas'}, val: '43,000' },
+                        { label: {en: 'ABC Book Value', es: 'Valor en Libros ABC'}, val: '20,000' },
+                        { label: {en: 'Fair Value Adjustment', es: 'Ajuste de Valor Razonable'}, val: '2,000' },
+                        { label: {en: 'Consolidated', es: 'Consolidado'}, val: '65,000', isTotal: true }
+                    ]
+                }
+            },
+            { 
+                type: 'row', label: 'Investment in ABC (60%)', c1: '9,000', c2: '-', c3: '-9,000', c4: '-',
+                adjInfo: { 
+                    title: { en: 'Investment Elimination', es: 'Eliminación de la Inversión' }, 
+                    theory: { 
+                        en: 'Investment is eliminated against Equity.', 
+                        es: 'La inversión se elimina contra el Patrimonio de la subsidiaria.' 
+                    }, 
+                    text: { en: 'Replaced by underlying assets/liabilities.', es: 'Se reemplaza por los activos/pasivos subyacentes.' },
+                    calc: [
+                        { label: {en: 'Investment Cost', es: 'Costo de Inversión'}, val: '9,000' },
+                        { label: {en: 'Elimination', es: 'Eliminación'}, val: '(9,000)' },
+                        { label: {en: 'Consolidated', es: 'Consolidado'}, val: '-', isTotal: true }
+                    ]
+                }
+            },
+            { 
+                type: 'row', label: 'Investment in XYZ (25%)', c1: '3,000', c2: '-', c3: '1,150', c4: '4,150',
+                adjInfo: { 
+                    title: { en: 'Investment in Associate', es: 'Inversión en Asociada' }, 
+                    theory: { 
+                        en: 'Associates are accounted for using the Equity Method.', 
+                        es: 'Las asociadas se contabilizan usando el Método de Participación.' 
+                    }, 
+                    text: { en: 'Value = Initial Cost + Share of Post-Acquisition Profits.', es: 'Valor = Costo Inicial + Participación en Utilidades Post-Adquisición.' },
+                    calc: [
+                        { label: {en: 'Initial Cost (N-2)', es: 'Costo Inicial (N-2)'}, val: '3,000' },
+                        { label: {en: 'Share of Profit Growth', es: 'Part. en Crecimiento Utilidad'}, val: '1,150' },
+                        { label: {en: 'Carrying Amount', es: 'Valor en Libros'}, val: '4,150', isTotal: true }
+                    ]
+                }
+            },
+            { type: 'row', label: 'Goodwill', c1: '-', c2: '-', c3: '-', c4: '-', 
+                adjInfo: { 
+                    title: { en: 'Goodwill', es: 'Crédito Mercantil' }, 
+                    theory: { en: 'Cost of Inv - Share of Net Assets.', es: 'Costo Inv - Participación Activos Netos.' }, 
+                    text: { en: 'No Goodwill in this simplified scenario.', es: 'Sin Crédito Mercantil en este escenario simplificado.' }
+                } 
+            },
+            
+            { type: 'section', label: 'CURRENT ASSETS' },
+            { 
+                type: 'row', label: 'Inventories', c1: '7,100', c2: '6,600', c3: '-1,000', c4: '12,700',
+                adjInfo: { 
+                    title: { en: 'Unrealized Profit in Inventory', es: 'Utilidad No Realizada en Inventario' }, 
+                    theory: { en: 'Remove Unrealized Profit.', es: 'Eliminar Utilidad No Realizada.' }, 
+                    text: { en: 'Unsold goods in ABC contain profit from Dumas sales.', es: 'Mercancía no vendida en ABC contiene utilidad de ventas de Dumas.' },
+                    calc: [
+                        { label: {en: 'Dumas Inventory', es: 'Inventario Dumas'}, val: '7,100' },
+                        { label: {en: 'ABC Inventory', es: 'Inventario ABC'}, val: '6,600' },
+                        { label: {en: 'Less: Unrealized Profit', es: 'Menos: Utilidad No Realizada'}, val: '(1,000)' },
+                        { label: {en: 'Consolidated', es: 'Consolidado'}, val: '12,700', isTotal: true }
+                    ]
+                }
+            },
+            { type: 'row', label: 'Receivables', c1: '11,500', c2: '4,000', c3: '-3,500', c4: '12,000',
+                adjInfo: { 
+                    title: { en: 'Intra-group Balance Elimination', es: 'Eliminación de Saldos Intragrupo' }, 
+                    theory: { en: 'Eliminate internal receivables.', es: 'Eliminar cuentas por cobrar internas.' }, 
+                    text: { en: 'Dumas has a receivable of 3,500 from ABC.', es: 'Dumas tiene una cuenta por cobrar de 3,500 a ABC.' },
+                    calc: [
+                        { label: {en: 'Dumas Receivables', es: 'Ctas Cobrar Dumas'}, val: '11,500' },
+                        { label: {en: 'ABC Receivables', es: 'Ctas Cobrar ABC'}, val: '4,000' },
+                        { label: {en: 'Elim: Intra-group Debt', es: 'Elim: Deuda Intragrupo'}, val: '(3,500)' },
+                        { label: {en: 'Consolidated', es: 'Consolidado'}, val: '12,000', isTotal: true }
+                    ]
+                } 
+            },
+            { type: 'row', label: 'Cash', c1: '3,400', c2: '2,400', c3: '-', c4: '5,800' },
+            { type: 'grand', label: 'TOTAL ASSETS', c1: '77,000', c2: '33,000', c3: '', c4: '99,650' },
+
+            { type: 'space' },
+            { type: 'section', label: 'EQUITY' },
+            { type: 'row', label: 'Share Capital', c1: '30,000', c2: '15,000', c3: '-15,000', c4: '30,000', 
+                adjInfo: { 
+                    title: { en: 'Equity Elimination', es: 'Eliminación de Patrimonio' }, 
+                    theory: { en: 'Only Parent Share Capital remains.', es: 'Solo permanece el Capital Social de la Matriz.' }, 
+                    text: { en: 'ABC capital is eliminated.', es: 'El capital de ABC se elimina.' } 
+                } 
+            },
+            { type: 'row', label: 'Reserves', c1: '10,000', c2: '6,000', c3: '-6,000', c4: '10,000', 
+                adjInfo: { 
+                    title: { en: 'Reserves Elimination', es: 'Eliminación de Reservas' }, 
+                    theory: { en: 'Eliminate Sub reserves.', es: 'Eliminar reservas de la Sub.' }, 
+                    text: { en: 'Consolidated reserves reflect Parent + Share of Post-Acq growth.', es: 'Reservas consolidadas reflejan Matriz + Part. Crecimiento Post-Adq.' } 
+                } 
+            },
+            { type: 'row', label: 'Consolidated Profit', c1: '2,500', c2: '4,000', c3: '', c4: '5,050', 
+                conInfo: { 
+                    title: { en: 'Consolidated Profit', es: 'Utilidad Consolidada' }, 
+                    theory: { en: 'See Income Statement for detail.', es: 'Ver Estado de Resultados para detalle.' }, 
+                    text: { en: 'Calculated in P&L.', es: 'Calculado en GyP.' }
+                } 
+            },
+            { type: 'row', label: 'Non-Controlling Interest', c1: '-', c2: '-', c3: '10,800', c4: '10,800', 
+                adjInfo: { 
+                    title: { en: 'Non-Controlling Interest (40%)', es: 'Participación No Controladora (40%)' }, 
+                    theory: { en: 'Equity attributable to outside shareholders.', es: 'Patrimonio atribuible a accionistas externos.' }, 
+                    text: { en: '40% of ABC Net Assets at Fair Value.', es: '40% de Activos Netos de ABC a Valor Razonable.' },
+                    calc: [
+                        { label: {en: 'ABC Net Assets (BV)', es: 'Activos Netos ABC (Libros)'}, val: '25,000' },
+                        { label: {en: 'Fair Value Adj', es: 'Ajuste Valor Razonable'}, val: '2,000' },
+                        { label: {en: 'Total FV', es: 'Total VR'}, val: '27,000' },
+                        { label: {en: 'NCI %', es: '% NCI'}, val: '40%' },
+                        { label: {en: 'NCI Value', es: 'Valor NCI'}, val: '10,800', isTotal: true }
+                    ]
+                } 
+            },
+            
+            { type: 'section', label: 'LIABILITIES' },
+            { type: 'row', label: 'Financial Debt', c1: '23,000', c2: '-', c3: '-', c4: '23,000' },
+            { type: 'row', label: 'Payables', c1: '11,500', c2: '8,000', c3: '-3,500', c4: '16,000',
+                adjInfo: { 
+                    title: { en: 'Intra-group Payables', es: 'Cuentas por Pagar Intragrupo' }, 
+                    theory: { en: 'Eliminate corresponding liability.', es: 'Eliminar el pasivo correspondiente.' }, 
+                    text: { en: 'Matches the 3,500 receivable elimination.', es: 'Corresponde a la eliminación de 3,500 en ctas por cobrar.' }
+                } 
+            },
+            { type: 'grand', label: 'TOTAL EQ & LIAB', c1: '77,000', c2: '33,000', c3: '', c4: '94,850' }
+        ];
+
+        // 2. INCOME STATEMENT DATA
+        const incomeStatementRows = [
+            { 
+                type: 'row', label: 'Sales', c1: '300,700', c2: '154,500', c3: '-50,000', c4: '405,200',
+                adjInfo: { 
+                    title: { en: 'Intra-group Sales', es: 'Ventas Intragrupo' }, 
+                    theory: { en: 'Eliminate internal sales.', es: 'Eliminar ventas internas.' }, 
+                    text: { en: 'Dumas sold 50,000 to ABC.', es: 'Dumas vendió 50,000 a ABC.' },
+                    calc: [
+                        { label: {en: 'Dumas Sales', es: 'Ventas Dumas'}, val: '300,700' },
+                        { label: {en: 'ABC Sales', es: 'Ventas ABC'}, val: '154,500' },
+                        { label: {en: 'Elim: Intra-sales', es: 'Elim: Ventas internas'}, val: '(50,000)' },
+                        { label: {en: 'Consolidated', es: 'Consolidado'}, val: '405,200', isTotal: true }
+                    ]
+                }
+            },
+            { type: 'row', label: 'Financial Revenues', c1: '600', c2: '-', c3: '-600', c4: '-',
+                adjInfo: { 
+                    title: { en: 'Dividend Elimination', es: 'Eliminación de Dividendos' }, 
+                    theory: { en: 'Eliminate internal dividends.', es: 'Eliminar dividendos internos.' }, 
+                    text: { en: 'Dumas received 600 in dividends from ABC.', es: 'Dumas recibió 600 en dividendos de ABC.' }
+                } 
+            },
+            { type: 'row', label: 'Share of Profit (Associates)', c1: '-', c2: '-', c3: '150', c4: '150',
+                adjInfo: { 
+                    title: { en: 'Share of Profit of XYZ', es: 'Part. en Utilidad de XYZ' }, 
+                    theory: { en: 'Equity Method Income.', es: 'Ingreso por Método de Participación.' }, 
+                    text: { en: '25% of XYZ Net Profit (600).', es: '25% de la Utilidad Neta de XYZ (600).' },
+                    calc: [
+                        { label: {en: 'XYZ Net Profit', es: 'Utilidad Neta XYZ'}, val: '600' },
+                        { label: {en: 'Ownership %', es: '% Participación'}, val: '25%' },
+                        { label: {en: 'Share of Profit', es: 'Part. en Utilidad'}, val: '150', isTotal: true }
+                    ]
+                }
+            },
+            { type: 'total', label: 'TOTAL REVENUES', c1: '301,300', c2: '154,500', c3: '', c4: '405,350' },
+            
+            { type: 'space' },
+            
+            { 
+                type: 'row', label: 'Purchases', c1: '120,000', c2: '62,000', c3: '-50,000', c4: '132,000',
+                adjInfo: { 
+                    title: { en: 'Purchases Adjustment', es: 'Ajuste de Compras' }, 
+                    theory: { en: 'Eliminate internal purchases.', es: 'Eliminar compras internas.' }, 
+                    text: { en: 'Corresponding to the 50,000 sales elimination.', es: 'Corresponde a la eliminación de 50,000 en ventas.' }
+                }
+            },
+            { 
+                type: 'row', label: 'Change in Inventory', c1: '-1,100', c2: '-2,600', c3: '+1,000', c4: '-2,700',
+                adjInfo: { 
+                    title: { en: 'Change in Inventory (URP)', es: 'Var. Inventario (URP)' }, 
+                    theory: { en: 'Adjust for Unrealized Profit.', es: 'Ajustar por Utilidad No Realizada.' }, 
+                    text: { en: 'Add back the 1,000 profit trapped in closing stock.', es: 'Sumar la utilidad de 1,000 atrapada en el stock final.' }
+                }
+            },
+            { type: 'row', label: 'Other Operating Exp', c1: '72,000', c2: '38,600', c3: '-', c4: '110,600' },
+            { type: 'row', label: 'Staff Cost', c1: '89,000', c2: '42,000', c3: '-', c4: '131,000' },
+            { type: 'row', label: 'Depreciation', c1: '16,000', c2: '8,500', c3: '-', c4: '24,500' },
+            { type: 'row', label: 'Financial Expenses', c1: '1,400', c2: '-', c3: '-', c4: '1,400' },
+            { type: 'row', label: 'Income Tax', c1: '1,500', c2: '2,000', c3: '-', c4: '3,500' },
+            
+            { type: 'grand', label: 'NET PROFIT', c1: '2,500', c2: '4,000', c3: '', c4: '5,050' },
+            
+            { type: 'space' },
+            { type: 'section', label: 'ATTRIBUTABLE TO:' },
+            { type: 'row', label: 'Owners of Parent', c1: '', c2: '', c3: '', c4: '3,850', 
+                conInfo: { 
+                    title: { en: 'Parent Share', es: 'Participación Controladora' }, 
+                    theory: { en: 'Balancing figure.', es: 'Cifra de ajuste.' }, 
+                    text: { en: 'Total - NCI.', es: 'Total - NCI.' },
+                    calc: [
+                        { label: {en: 'Total Profit', es: 'Utilidad Total'}, val: '5,050' },
+                        { label: {en: 'Less: Non-Controlling Interest', es: 'Menos: Part. No Controladora'}, val: '(1,200)' },
+                        { label: {en: 'Parent Share', es: 'Parte Matriz'}, val: '3,850', isTotal: true }
+                    ]
+                } 
+            },
+            { type: 'row', label: 'Non-Controlling Interest', c1: '', c2: '', c3: '', c4: '1,200', 
+                adjInfo: { 
+                    title: { en: 'NCI Share of Profit', es: 'Participación NCI en Utilidad' }, 
+                    theory: { en: 'ABC Profit x NCI%.', es: 'Utilidad ABC x %NCI.' }, 
+                    text: { en: 'Based on ABC profit (Adjustment for URP in Closing Stock is applied).', es: 'Basado en utilidad ABC (Se aplica ajuste por URP en stock final).' },
+                    calc: [
+                        { label: {en: 'ABC Profit', es: 'Utilidad ABC'}, val: '4,000' },
+                        { label: {en: '- Unrealized Profit', es: '- Utilidad No Realizada'}, val: '(1,000)' },
+                        { label: {en: 'Adjusted Profit', es: 'Utilidad Ajustada'}, val: '3,000', isTotal: false },
+                        { label: {en: 'x NCI % (40%)', es: 'x % NCI (40%)'}, val: '1,200', isTotal: true } 
+                    ]
+                } 
+            }
+        ];
+
+        // 3. THEORY CONTENT (Sidebar)
+        const theoryBS = [
+            { id: 'bs1', label: {en:'Structure', es:'Estructura'}, num: '1', title: {en:'Group Structure', es:'Estructura del Grupo'}, 
+              content: { en: 'Dumas owns 60% of ABC (900k/1.5m shares).<br>Dumas owns 25% of XYZ (Associate).', es: 'Dumas posee 60% de ABC (900k/1.5m acciones).<br>Dumas posee 25% de XYZ (Asociada).' } 
+            },
+            { id: 'bs2', label: {en:'Associate', es:'Asociada'}, num: '2', title: {en:'Accounting for Associate (XYZ)', es:'Contab. de Asociada (XYZ)'}, 
+              content: { en: 'XYZ is NOT consolidated line-by-line. Used Equity Method: Investment grows with share of profits.', es: 'XYZ NO se consolida línea por línea. Se usa Método de Participación: La inversión crece con la parte de utilidades.' } 
+            },
+            { id: 'bs3', label: {en:'NCI', es:'NCI'}, num: '3', title: {en:'Non-Controlling Interest', es:'Participación No Controladora'}, 
+              content: { en: 'NCI is 40% of ABC. Calculated on total Equity of ABC (Capital + Reserves + Profit).', es: 'El NCI es el 40% de ABC. Calculado sobre el Patrimonio total de ABC (Capital + Reservas + Utilidad).' } 
+            }
+        ];
+
+        const theoryPL = [
+            { id: 'pl1', label: {en:'Sales', es:'Ventas'}, num: '1', title: {en:'Intra-group Sales', es:'Ventas Intragrupo'}, 
+              content: { en: 'Dumas sold 50,000 to ABC. This must be removed from Sales and Purchases.', es: 'Dumas vendió 50,000 a ABC. Esto debe eliminarse de Ventas y Compras.' } 
+            },
+            { id: 'pl2', label: {en:'Unrealized', es:'Util. No Real.'}, num: '2', title: {en:'Unrealized Profit', es:'Utilidad No Realizada'}, 
+              content: { en: 'ABC holds 5,000 inventory from Dumas with 1,000 profit. This profit is unrealized and removed.', es: 'ABC tiene 5,000 en inventario de Dumas con 1,000 de utilidad. Esta utilidad no realizada se elimina.' } 
+            },
+            { id: 'pl3', label: {en:'Associate', es:'Asociada'}, num: '3', title: {en:'Share of XYZ Profit', es:'Part. Utilidad XYZ'}, 
+              content: { en: 'Dumas recognizes 25% of XYZ profit (600) = 150 as a single line item.', es: 'Dumas reconoce el 25% de la utilidad de XYZ (600) = 150 como un solo rubro.' } 
+            }
+        ];
+
+        // --- STATE MANAGEMENT ---
+        let currentView = 'BS'; // 'BS' or 'PL'
+
+        function init() {
+            switchView('BS');
+        }
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+            document.getElementById('lang-es').classList.toggle('active', lang === 'es');
+            document.getElementById('btn-analysis-text').innerText = lang === 'en' ? 'Help' : 'Ayuda';
+            document.getElementById('sidebar-title').innerText = lang === 'en' ? 'Consolidation Steps' : 'Pasos de Consolidación';
+            switchView(currentView);
+        }
+
+        function switchView(view) {
+            currentView = view;
+            document.getElementById('btn-BS').classList.toggle('active', view === 'BS');
+            document.getElementById('btn-PL').classList.toggle('active', view === 'PL');
+            renderTable(view === 'BS' ? balanceSheetRows : incomeStatementRows);
+            updateSidebarNav(view);
+            document.getElementById('sidebar').classList.remove('active');
+            document.getElementById('overlay').classList.remove('active');
+        }
+
+        function renderTable(rows) {
+            const thead = document.getElementById('table-head');
+            const tbody = document.getElementById('table-body');
+            const headers = currentLang === 'en' 
+                ? ['Items', 'Dumas (Parent)', 'ABC (Sub)', 'Adjustments (+/-)', 'Group (Consol.)']
+                : ['Rubros', 'Dumas (Matriz)', 'ABC (Sub)', 'Ajustes (+/-)', 'Grupo (Consol.)'];
+
+            thead.innerHTML = `
+                <tr>
+                    <th>${currentView === 'BS' ? (currentLang === 'en' ? 'Balance Sheet Items' : 'Rubros del Balance') : (currentLang === 'en' ? 'Income Statement Items' : 'Rubros de Resultados')}</th>
+                    <th>${headers[1]}</th>
+                    <th>${headers[2]}</th>
+                    <th class="consolidado-header">${headers[3]}</th>
+                    <th class="group-header">${headers[4]}</th>
+                </tr>
+            `;
+
+            let html = '';
+            rows.forEach((r, i) => {
+                if(r.type === 'section') {
+                    html += `<tr class="row-section"><td colspan="5">${r.label}</td></tr>`;
+                } else if (r.type === 'space') {
+                    // Empty row handled by padding or removed for compactness
+                } else if (r.type === 'total') {
+                    html += `<tr class="row-total"><td>${r.label}</td><td>${r.c1}</td><td>${r.c2}</td><td>${r.c3}</td><td>${r.c4}</td></tr>`;
+                } else if (r.type === 'grand') {
+                    html += `<tr class="row-grand-total"><td>${r.label}</td><td>${r.c1}</td><td>${r.c2}</td><td>${r.c3}</td><td>${r.c4}</td></tr>`;
+                } else {
+                    const clickAdj = r.adjInfo ? `onclick="openModal(${i}, 'adj')"` : '';
+                    const classAdj = r.adjInfo ? 'interactive-adj' : '';
+                    const iconAdj = r.adjInfo ? '<span class="info-icon">i</span>' : '';
+                    
+                    const clickCon = r.conInfo || r.adjInfo ? `onclick="openModal(${i}, '${r.conInfo ? 'con' : 'adj'}')"` : ''; 
+                    const classCon = r.conInfo ? 'interactive' : (r.adjInfo ? 'interactive-adj' : '');
+                    const iconCon = r.conInfo ? '<span class="info-icon">i</span>' : '';
+
+                    html += `<tr>
+                        <td>${r.label}</td>
+                        <td>${r.c1}</td>
+                        <td>${r.c2}</td>
+                        <td class="${classAdj}" ${clickAdj}>${r.c3} ${iconAdj}</td>
+                        <td class="${classCon}" ${clickCon}>${r.c4} ${iconCon}</td>
+                    </tr>`;
+                }
+            });
+            tbody.innerHTML = html;
+        }
+
+        // --- SIDEBAR LOGIC ---
+        function updateSidebarNav(view) {
+            const navContainer = document.getElementById('sidebar-nav');
+            const data = view === 'BS' ? theoryBS : theoryPL;
+            let html = '';
+            data.forEach((item, idx) => {
+                html += `<div class="nav-item ${idx===0 ? 'active' : ''}" onclick="showTheory('${item.id}', this)">
+                    <span class="nav-num">${item.num}</span>
+                    <span class="nav-label">${item.label[currentLang]}</span>
+                </div>`;
+            });
+            navContainer.innerHTML = html;
+            showTheory(data[0].id, navContainer.children[0]);
+        }
+
+        function showTheory(id, btnElement) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            if(btnElement) btnElement.classList.add('active');
+            const allData = [...theoryBS, ...theoryPL];
+            const item = allData.find(x => x.id === id);
+            const contentDiv = document.getElementById('sidebar-content');
+            contentDiv.innerHTML = `
+                <h2 class="tab-title" style="margin-top:0; font-size:1.1rem; color:#1e3a8a;">${item.title[currentLang]}</h2>
+                <div class="theory-box">${item.content[currentLang]}</div>
+            `;
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('active');
+        }
+
+        function openModal(index, type) {
+            const rows = currentView === 'BS' ? balanceSheetRows : incomeStatementRows;
+            const row = rows[index];
+            const info = type === 'adj' ? row.adjInfo : row.conInfo;
+            if(!info) return;
+            const title = info.title[currentLang];
+            document.getElementById('modalTitle').innerText = title;
+            const body = document.getElementById('modalBody');
+            
+            let content = `
+                <div class="theory-box" style="margin-bottom:10px; background:var(--accent-bg); border-color:var(--accent); color:#92400e;">
+                    <strong>Concept:</strong> ${info.theory[currentLang]}
+                </div>
+                <p style="color:#334155; line-height:1.4; margin-bottom:15px; font-size:0.95rem;">${info.text[currentLang]}</p>
+            `;
+
+            if (info.calc) {
+                let calcHtml = '<div class="calc-box"><div class="calc-header">' + (currentLang === 'en' ? 'CALCULATION' : 'CÁLCULO') + '</div>';
+                info.calc.forEach(step => {
+                    let className = 'calc-row';
+                    if (step.isTotal) className += ' total';
+                    calcHtml += `<div class="${className}"><span>${step.label[currentLang]}</span><span>${step.val}</span></div>`;
+                });
+                calcHtml += '</div>';
+                content += calcHtml;
+            }
+            body.innerHTML = content;
+            document.getElementById('modalWrapper').classList.add('open');
+        }
+
+        function closeModal() {
+            document.getElementById('modalWrapper').classList.remove('open');
+        }
+
+        init();
+
+    </script>
+</body>
+</html>
